@@ -2,7 +2,7 @@
   "name": "foodbridge",
   "version": "1.0.0",
   "description": "Food rescue platform built on Stellar blockchain",
-  "main": "src/main.jsx",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

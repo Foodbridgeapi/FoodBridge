@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { createStellarWallet, fundTestnetAccount, getAccountBalance } from './stellarClient';
-import './App.css';
 
 function App() {
   const [wallet, setWallet] = useState(null);

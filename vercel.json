@@ -3,5 +3,8 @@
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

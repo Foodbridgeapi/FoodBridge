@@ -10,8 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npx vite build",
-    "preview": "npx vite preview",
-    "postinstall": "node -e \"try { require('child_process').execSync('chmod +x node_modules/.bin/*'); } catch(e) {}\""
+    "preview": "npx vite preview"
   },
   "dependencies": {
     "react": "^18.2.0",

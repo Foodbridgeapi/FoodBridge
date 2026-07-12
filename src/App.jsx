@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { createStellarWallet, fundTestnetAccount, getAccountBalance } from './stellarClient';
+import React, { useState, useEffect } from 'react';
+import { createStellarWallet, fundTestnetAccount, getAccountBalance, getTransactionHistory } from './stellarClient';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -26,6 +26,8 @@ function App() {
     expiryDate: ''
   });
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
+  const [transactionHistory, setTransactionHistory] = useState([]);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [foodListings, setFoodListings] = useState([
     { id: 1, title: 'Fresh Vegetables', type: 'Produce', quantity: '10kg', location: 'Downtown', status: 'Available' },
     { id: 2, title: 'Bread Items', type: 'Bakery', quantity: '20 loaves', location: 'Midtown', status: 'Available' },
@@ -46,6 +48,15 @@ function App() {
       // Get balance
       const balances = await getAccountBalance(newWallet.publicKey);
       setBalance(balances);
+      
+      // Get transaction history
+      try {
+        const transactions = await getTransactionHistory(newWallet.publicKey);
+        setTransactionHistory(transactions);
+      } catch (txError) {
+        console.error('Error fetching transaction history:', txError);
+        setTransactionHistory([]);
+      }
       
       // Show secret key modal one time
       setShowSecretModal(true);
@@ -155,6 +166,12 @@ function App() {
             >
               🍎 Donate Food
             </button>
+            <button
+              onClick={() => setShowTransactionHistory(!showTransactionHistory)}
+              className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium px-4 py-2 rounded-full transition-colors shadow-sm"
+            >
+              📜 History
+            </button>
             <div className="bg-primary-50 text-primary-700 px-4 py-2 rounded-full text-sm font-medium">
               {wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-8)}
             </div>
@@ -210,6 +227,35 @@ function App() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Transaction History */}
+        {showTransactionHistory && wallet && (
+          <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-neutral-100">
+            <h2 className="text-xl font-semibold mb-4 text-neutral-900">Transaction History</h2>
+            {transactionHistory.length === 0 ? (
+              <p className="text-sm text-neutral-600">No transactions yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {transactionHistory.map((tx, index) => (
+                  <div key={tx.id || index} className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono text-neutral-500">{tx.hash?.slice(0, 12)}...</span>
+                      <span className="text-xs text-neutral-600">
+                        {new Date(tx.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-neutral-900">
+                      {tx.memo ? tx.memo : 'No memo'}
+                    </p>
+                    <p className="text-xs text-neutral-600 mt-1">
+                      Type: {tx.type || 'Unknown'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -1,4 +1,4 @@
-import { Server, TransactionBuilder, Networks, Operation, Keypair, Asset } from '@stellar/stellar-sdk';
+import { Horizon, TransactionBuilder, Networks, Operation, Keypair, Asset } from '@stellar/stellar-sdk';
 
 // Stellar configuration for FoodBridge
 const STELLAR_NETWORK = process.env.VITE_STELLAR_NETWORK === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
@@ -7,7 +7,7 @@ const HORIZON_URL = process.env.VITE_STELLAR_NETWORK === 'testnet'
   : 'https://horizon.stellar.org';
 
 // Initialize Stellar server
-const server = new Server(HORIZON_URL);
+const server = new Horizon.Server(HORIZON_URL);
 
 // FoodBridge issuer account (for creating custom assets)
 const FOODBRIDGE_ISSUER_PUBLIC_KEY = process.env.VITE_FOODBRIDGE_ISSUER_PUBLIC_KEY;

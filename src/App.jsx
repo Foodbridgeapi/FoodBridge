@@ -5,6 +5,8 @@ function App() {
   const [wallet, setWallet] = useState(null);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showSecretModal, setShowSecretModal] = useState(false);
   const [foodListings, setFoodListings] = useState([
     { id: 1, title: 'Fresh Vegetables', type: 'Produce', quantity: '10kg', location: 'Downtown', status: 'Available' },
     { id: 2, title: 'Bread Items', type: 'Bakery', quantity: '20 loaves', location: 'Midtown', status: 'Available' },
@@ -25,12 +27,24 @@ function App() {
       // Get balance
       const balances = await getAccountBalance(newWallet.publicKey);
       setBalance(balances);
+      
+      // Show secret key modal one time
+      setShowSecretModal(true);
     } catch (error) {
       console.error('Error creating wallet:', error);
       alert('Failed to create wallet. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  };
+
+  const handleCloseSecretModal = () => {
+    setShowSecretModal(false);
   };
 
   const handleClaimItem = (id) => {
@@ -74,7 +88,18 @@ function App() {
               </div>
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Secret Key</p>
-                <p className="font-mono text-sm bg-neutral-50 p-3 rounded-xl border border-neutral-200">{wallet.secretKey}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm bg-neutral-50 p-3 rounded-xl border border-neutral-200 flex-1">
+                    {showSecretKey ? wallet.secretKey : '•••••••••••••••••••••••••'}
+                  </p>
+                  <button
+                    onClick={() => setShowSecretKey(!showSecretKey)}
+                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                    title={showSecretKey ? 'Hide' : 'Show'}
+                  >
+                    {showSecretKey ? '🙈' : '👁️'}
+                  </button>
+                </div>
                 <p className="text-xs text-red-500 mt-2">⚠️ Keep your secret key safe!</p>
               </div>
               {balance && (
@@ -145,6 +170,41 @@ function App() {
       <footer className="text-center text-sm text-neutral-500 py-8 border-t border-neutral-100 mt-12">
         © 2024 FoodBridge. Built on Stellar blockchain.
       </footer>
+
+      {/* Secret Key Modal */}
+      {showSecretModal && wallet && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🔑</span>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-900 mb-2">Save Your Secret Key</h3>
+              <p className="text-sm text-red-600 font-medium">⚠️ This will not be shown again!</p>
+            </div>
+            
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 mb-4">
+              <p className="text-xs text-neutral-600 mb-2">Secret Key:</p>
+              <p className="font-mono text-sm break-all bg-white p-3 rounded border border-neutral-200">{wallet.secretKey}</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => copyToClipboard(wallet.secretKey)}
+                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 rounded-xl transition-colors"
+              >
+                📋 Copy to Clipboard
+              </button>
+              <button
+                onClick={handleCloseSecretModal}
+                className="flex-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-900 font-medium py-3 rounded-xl transition-colors"
+              >
+                I've Saved It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

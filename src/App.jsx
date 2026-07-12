@@ -5,6 +5,7 @@ function App() {
   const [wallet, setWallet] = useState(null);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [listingsLoading, setListingsLoading] = useState(false);
   const [showSecretKey, setShowSecretKey] = useState(false);
   const [showSecretModal, setShowSecretModal] = useState(false);
   const [foodListings, setFoodListings] = useState([
@@ -55,7 +56,7 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white shadow-sm sticky top-0 z-10">
+      <header className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-primary-50 to-white shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🍎</span>
           <h1 className="text-xl font-bold text-neutral-900">FoodBridge</h1>
@@ -121,45 +122,72 @@ function App() {
         {/* Food Listings */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-6 text-neutral-900">Available Food Listings</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {foodListings.map((food) => (
-              <div key={food.id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-6 border border-neutral-100">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-neutral-900">{food.title}</h3>
-                  <span className="bg-primary-50 text-primary-700 text-xs font-medium px-3 py-1 rounded-full">
-                    Available
-                  </span>
+          
+          {listingsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-md p-6 border border-neutral-100">
+                  <div className="animate-pulse">
+                    <div className="h-6 bg-neutral-200 rounded mb-3 w-3/4"></div>
+                    <div className="h-4 bg-neutral-200 rounded mb-2 w-1/2"></div>
+                    <div className="h-4 bg-neutral-200 rounded mb-2 w-2/3"></div>
+                    <div className="h-4 bg-neutral-200 rounded mb-4 w-1/2"></div>
+                    <div className="h-10 bg-neutral-200 rounded-xl"></div>
+                  </div>
                 </div>
-                <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
-                  <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
-                  <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
-                  <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
+              ))}
+            </div>
+          ) : foodListings.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-md p-12 border border-neutral-100 text-center">
+              <div className="text-6xl mb-4">🍽️</div>
+              <h3 className="text-xl font-semibold text-neutral-900 mb-2">No Food Listings Available</h3>
+              <p className="text-sm text-neutral-600">Check back later or donate food to help others!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {foodListings.map((food) => (
+                <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
+                  food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
+                  food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :
+                  food.type === 'Dairy' ? 'border-l-4 border-l-blue-500' : ''
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-neutral-900">{food.title}</h3>
+                    <span className="bg-primary-50 text-primary-700 text-xs font-medium px-3 py-1 rounded-full">
+                      Available
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
+                    <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
+                    <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
+                    <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
+                  </div>
+                  <button 
+                    onClick={() => handleClaimItem(food.id)}
+                    className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2.5 rounded-xl transition-colors"
+                  >
+                    Claim This Item
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleClaimItem(food.id)}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2.5 rounded-xl transition-colors"
-                >
-                  Claim This Item
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Features Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-neutral-50 rounded-2xl p-6 text-center">
-            <div className="text-3xl mb-3">🔗</div>
+            <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center text-2xl mx-auto mb-3">🔗</div>
             <h3 className="font-semibold text-neutral-900 mb-2">Stellar Integration</h3>
             <p className="text-sm text-neutral-600">Transparent food tracking on blockchain with immutable records</p>
           </div>
           <div className="bg-neutral-50 rounded-2xl p-6 text-center">
-            <div className="text-3xl mb-3">💰</div>
+            <div className="w-16 h-16 rounded-full bg-accent-100 flex items-center justify-center text-2xl mx-auto mb-3">💰</div>
             <h3 className="font-semibold text-neutral-900 mb-2">Micro-Donations</h3>
             <p className="text-sm text-neutral-600">Low-cost transactions to support food rescue operations</p>
           </div>
           <div className="bg-neutral-50 rounded-2xl p-6 text-center">
-            <div className="text-3xl mb-3">🌍</div>
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl mx-auto mb-3">🌍</div>
             <h3 className="font-semibold text-neutral-900 mb-2">Global Access</h3>
             <p className="text-sm text-neutral-600">Accessible to anyone with a smartphone, no bank account needed</p>
           </div>

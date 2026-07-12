@@ -1,16 +1,16 @@
 import { Horizon, TransactionBuilder, Networks, Operation, Keypair, Asset } from '@stellar/stellar-sdk';
 
 // Stellar configuration for FoodBridge
-const STELLAR_NETWORK = process.env.VITE_STELLAR_NETWORK === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
-const HORIZON_URL = process.env.VITE_STELLAR_NETWORK === 'testnet' 
-  ? 'https://horizon-testnet.stellar.org' 
+const STELLAR_NETWORK = import.meta.env.VITE_STELLAR_NETWORK === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
+const HORIZON_URL = import.meta.env.VITE_STELLAR_NETWORK === 'testnet'
+  ? 'https://horizon-testnet.stellar.org'
   : 'https://horizon.stellar.org';
 
 // Initialize Stellar server
 const server = new Horizon.Server(HORIZON_URL);
 
 // FoodBridge issuer account (for creating custom assets)
-const FOODBRIDGE_ISSUER_PUBLIC_KEY = process.env.VITE_FOODBRIDGE_ISSUER_PUBLIC_KEY;
+const FOODBRIDGE_ISSUER_PUBLIC_KEY = import.meta.env.VITE_FOODBRIDGE_ISSUER_PUBLIC_KEY;
 
 /**
  * Create a Stellar wallet for a new user
@@ -29,7 +29,7 @@ export function createStellarWallet() {
  * @param {string} publicKey - Stellar public key
  */
 export async function fundTestnetAccount(publicKey) {
-  if (process.env.VITE_STELLAR_NETWORK !== 'testnet') {
+  if (import.meta.env.VITE_STELLAR_NETWORK !== 'testnet') {
     throw new Error('Testnet funding only available on testnet');
   }
   

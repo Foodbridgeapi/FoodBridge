@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { createStellarWallet, fundTestnetAccount, getAccountBalance } from './stellarClient';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 function App() {
   const [wallet, setWallet] = useState(null);
@@ -23,6 +25,7 @@ function App() {
     location: 'Downtown',
     expiryDate: ''
   });
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
   const [foodListings, setFoodListings] = useState([
     { id: 1, title: 'Fresh Vegetables', type: 'Produce', quantity: '10kg', location: 'Downtown', status: 'Available' },
     { id: 2, title: 'Bread Items', type: 'Bakery', quantity: '20 loaves', location: 'Midtown', status: 'Available' },
@@ -127,6 +130,15 @@ function App() {
     return matchesSearch && matchesType && matchesLocation;
   });
 
+  const getLocationCoordinates = (location) => {
+    const coordinates = {
+      'Downtown': [40.7128, -74.0060],
+      'Midtown': [40.7549, -73.9840],
+      'Uptown': [40.7831, -73.9712]
+    };
+    return coordinates[location] || [40.7128, -74.0060];
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -203,7 +215,31 @@ function App() {
 
         {/* Food Listings */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-6 text-neutral-900">Available Food Listings</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-neutral-900">Available Food Listings</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-primary-500 text-white' 
+                    : 'bg-white text-neutral-600 hover:bg-neutral-100'
+                }`}
+              >
+                Grid View
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                  viewMode === 'map' 
+                    ? 'bg-primary-500 text-white' 
+                    : 'bg-white text-neutral-600 hover:bg-neutral-100'
+                }`}
+              >
+                Map View
+              </button>
+            </div>
+          </div>
           
           {/* Search & Filter Bar */}
           <div className="bg-white rounded-2xl shadow-md p-4 mb-6 border border-neutral-100">
@@ -264,41 +300,80 @@ function App() {
               <p className="text-sm text-neutral-600">Check back later or donate food to help others!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {filteredListings.map((food) => {
-                const isClaimed = claimedItems.includes(food.id);
-                return (
-                  <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
-                    food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
-                    food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :
-                    food.type === 'Dairy' ? 'border-l-4 border-l-blue-500' : ''
-                  } ${isClaimed ? 'opacity-60 bg-neutral-50' : ''}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className={`text-lg font-semibold ${isClaimed ? 'line-through text-neutral-400' : 'text-neutral-900'}`}>{food.title}</h3>
-                      <span className={`${isClaimed ? 'bg-neutral-200 text-neutral-600' : 'bg-primary-50 text-primary-700'} text-xs font-medium px-3 py-1 rounded-full`}>
-                        {isClaimed ? 'Claimed' : 'Available'}
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
-                      <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
-                      <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
-                      <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
-                    </div>
-                    <button 
-                      onClick={() => handleClaimItem(food)}
-                      disabled={isClaimed}
-                      className={`w-full font-medium py-2.5 rounded-xl transition-colors ${
-                        isClaimed 
-                          ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed' 
-                          : 'bg-primary-500 hover:bg-primary-600 text-white'
-                      }`}
-                    >
-                      {isClaimed ? 'Already Claimed' : 'Claim This Item'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {filteredListings.map((food) => {
+                    const isClaimed = claimedItems.includes(food.id);
+                    return (
+                      <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
+                        food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
+                        food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :
+                        food.type === 'Dairy' ? 'border-l-4 border-l-blue-500' : ''
+                      } ${isClaimed ? 'opacity-60 bg-neutral-50' : ''}`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className={`text-lg font-semibold ${isClaimed ? 'line-through text-neutral-400' : 'text-neutral-900'}`}>{food.title}</h3>
+                          <span className={`${isClaimed ? 'bg-neutral-200 text-neutral-600' : 'bg-primary-50 text-primary-700'} text-xs font-medium px-3 py-1 rounded-full`}>
+                            {isClaimed ? 'Claimed' : 'Available'}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
+                          <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
+                          <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
+                          <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleClaimItem(food)}
+                          disabled={isClaimed}
+                          className={`w-full font-medium py-2.5 rounded-xl transition-colors ${
+                            isClaimed 
+                              ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed' 
+                              : 'bg-primary-500 hover:bg-primary-600 text-white'
+                          }`}
+                        >
+                          {isClaimed ? 'Already Claimed' : 'Claim This Item'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-md p-4 border border-neutral-100" style={{ height: '500px' }}>
+                  <MapContainer center={[40.7128, -74.0060]} zoom={12} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {filteredListings.map((food) => {
+                      const isClaimed = claimedItems.includes(food.id);
+                      const coords = getLocationCoordinates(food.location);
+                      return (
+                        <Marker key={food.id} position={coords}>
+                          <Popup>
+                            <div className="p-2">
+                              <h3 className={`font-semibold ${isClaimed ? 'line-through' : ''}`}>{food.title}</h3>
+                              <p className="text-sm">{food.type} • {food.quantity}</p>
+                              <p className="text-sm">📍 {food.location}</p>
+                              <p className={`text-xs mt-1 ${isClaimed ? 'text-red-500' : 'text-green-500'}`}>
+                                {isClaimed ? 'Claimed' : 'Available'}
+                              </p>
+                              {!isClaimed && (
+                                <button
+                                  onClick={() => handleClaimItem(food)}
+                                  className="mt-2 bg-primary-500 text-white text-xs px-3 py-1 rounded hover:bg-primary-600"
+                                >
+                                  Claim This Item
+                                </button>
+                              )}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      );
+                    })}
+                  </MapContainer>
+                </div>
+              )}
+            </>
           )}
         </div>
 

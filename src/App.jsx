@@ -8,6 +8,9 @@ function App() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [showSecretKey, setShowSecretKey] = useState(false);
   const [showSecretModal, setShowSecretModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('All');
+  const [filterLocation, setFilterLocation] = useState('All');
   const [foodListings, setFoodListings] = useState([
     { id: 1, title: 'Fresh Vegetables', type: 'Produce', quantity: '10kg', location: 'Downtown', status: 'Available' },
     { id: 2, title: 'Bread Items', type: 'Bakery', quantity: '20 loaves', location: 'Midtown', status: 'Available' },
@@ -52,6 +55,15 @@ function App() {
     console.log('Claim item clicked for ID:', id);
     alert('Claim functionality not yet implemented');
   };
+
+  const filteredListings = foodListings.filter(food => {
+    const matchesSearch = food.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         food.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         food.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'All' || food.type === filterType;
+    const matchesLocation = filterLocation === 'All' || food.location === filterLocation;
+    return matchesSearch && matchesType && matchesLocation;
+  });
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -123,6 +135,44 @@ function App() {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-6 text-neutral-900">Available Food Listings</h2>
           
+          {/* Search & Filter Bar */}
+          <div className="bg-white rounded-2xl shadow-md p-4 mb-6 border border-neutral-100">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search by name, type, or location..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white"
+                >
+                  <option value="All">All Types</option>
+                  <option value="Produce">Produce</option>
+                  <option value="Bakery">Bakery</option>
+                  <option value="Dairy">Dairy</option>
+                </select>
+                <select
+                  value={filterLocation}
+                  onChange={(e) => setFilterLocation(e.target.value)}
+                  className="px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white"
+                >
+                  <option value="All">All Locations</option>
+                  <option value="Downtown">Downtown</option>
+                  <option value="Midtown">Midtown</option>
+                  <option value="Uptown">Uptown</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          
           {listingsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
@@ -137,7 +187,7 @@ function App() {
                 </div>
               ))}
             </div>
-          ) : foodListings.length === 0 ? (
+          ) : filteredListings.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-md p-12 border border-neutral-100 text-center">
               <div className="text-6xl mb-4">🍽️</div>
               <h3 className="text-xl font-semibold text-neutral-900 mb-2">No Food Listings Available</h3>
@@ -145,7 +195,7 @@ function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {foodListings.map((food) => (
+              {filteredListings.map((food) => (
                 <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
                   food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
                   food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :

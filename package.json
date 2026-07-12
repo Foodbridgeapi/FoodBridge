@@ -1,7 +1,7 @@
 {
   "name": "foodbridge",
   "version": "1.0.0",
-  "description": "Food rescue platform built on Stellar blockchain",
+  "description": "Food rescue platform built on Stellar blockchain - Vercel deployment fix",
   "type": "module",
   "engines": {
     "node": ">=18.0.0",

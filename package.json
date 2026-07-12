@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "npx vite build",
     "preview": "npx vite preview",
-    "postinstall": "chmod +x node_modules/.bin/* || true"
+    "postinstall": "node -e \"try { require('child_process').execSync('chmod +x node_modules/.bin/*'); } catch(e) {}\""
   },
   "dependencies": {
     "react": "^18.2.0",

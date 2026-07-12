@@ -11,6 +11,10 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [filterLocation, setFilterLocation] = useState('All');
+  const [claimModalItem, setClaimModalItem] = useState(null);
+  const [claimedItems, setClaimedItems] = useState([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [foodListings, setFoodListings] = useState([
     { id: 1, title: 'Fresh Vegetables', type: 'Produce', quantity: '10kg', location: 'Downtown', status: 'Available' },
     { id: 2, title: 'Bread Items', type: 'Bakery', quantity: '20 loaves', location: 'Midtown', status: 'Available' },
@@ -51,9 +55,22 @@ function App() {
     setShowSecretModal(false);
   };
 
-  const handleClaimItem = (id) => {
-    console.log('Claim item clicked for ID:', id);
-    alert('Claim functionality not yet implemented');
+  const handleClaimItem = (item) => {
+    setClaimModalItem(item);
+  };
+
+  const handleConfirmClaim = () => {
+    if (claimModalItem) {
+      setClaimedItems([...claimedItems, claimModalItem.id]);
+      setToastMessage(`Successfully claimed "${claimModalItem.title}"!`);
+      setShowToast(true);
+      setClaimModalItem(null);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
+  const handleCancelClaim = () => {
+    setClaimModalItem(null);
   };
 
   const filteredListings = foodListings.filter(food => {
@@ -195,31 +212,39 @@ function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {filteredListings.map((food) => (
-                <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
-                  food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
-                  food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :
-                  food.type === 'Dairy' ? 'border-l-4 border-l-blue-500' : ''
-                }`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-neutral-900">{food.title}</h3>
-                    <span className="bg-primary-50 text-primary-700 text-xs font-medium px-3 py-1 rounded-full">
-                      Available
-                    </span>
+              {filteredListings.map((food) => {
+                const isClaimed = claimedItems.includes(food.id);
+                return (
+                  <div key={food.id} className={`bg-white rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 p-6 border border-neutral-100 ${
+                    food.type === 'Produce' ? 'border-l-4 border-l-primary-500' :
+                    food.type === 'Bakery' ? 'border-l-4 border-l-amber-500' :
+                    food.type === 'Dairy' ? 'border-l-4 border-l-blue-500' : ''
+                  } ${isClaimed ? 'opacity-60 bg-neutral-50' : ''}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className={`text-lg font-semibold ${isClaimed ? 'line-through text-neutral-400' : 'text-neutral-900'}`}>{food.title}</h3>
+                      <span className={`${isClaimed ? 'bg-neutral-200 text-neutral-600' : 'bg-primary-50 text-primary-700'} text-xs font-medium px-3 py-1 rounded-full`}>
+                        {isClaimed ? 'Claimed' : 'Available'}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
+                      <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
+                      <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
+                      <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleClaimItem(food)}
+                      disabled={isClaimed}
+                      className={`w-full font-medium py-2.5 rounded-xl transition-colors ${
+                        isClaimed 
+                          ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed' 
+                          : 'bg-primary-500 hover:bg-primary-600 text-white'
+                      }`}
+                    >
+                      {isClaimed ? 'Already Claimed' : 'Claim This Item'}
+                    </button>
                   </div>
-                  <div className="space-y-1.5 text-sm text-neutral-600 mb-4">
-                    <p><span className="font-medium text-neutral-900">Type:</span> {food.type}</p>
-                    <p><span className="font-medium text-neutral-900">Quantity:</span> {food.quantity}</p>
-                    <p><span className="font-medium text-neutral-900">Location:</span> {food.location}</p>
-                  </div>
-                  <button 
-                    onClick={() => handleClaimItem(food.id)}
-                    className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2.5 rounded-xl transition-colors"
-                  >
-                    Claim This Item
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -281,6 +306,49 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Claim Confirmation Modal */}
+      {claimModalItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🛒</span>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-900 mb-2">Claim This Item?</h3>
+              <p className="text-sm text-neutral-600">You are about to claim:</p>
+            </div>
+            
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 mb-4">
+              <p className="font-semibold text-neutral-900">{claimModalItem.title}</p>
+              <p className="text-sm text-neutral-600">{claimModalItem.type} • {claimModalItem.quantity}</p>
+              <p className="text-sm text-neutral-600">📍 {claimModalItem.location}</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelClaim}
+                className="flex-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-900 font-medium py-3 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmClaim}
+                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 rounded-xl transition-colors"
+              >
+                Confirm Claim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-bounce">
+          {toastMessage}
         </div>
       )}
     </div>
